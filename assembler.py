@@ -3,7 +3,7 @@ import pandas as pd
 
 codes = pd.read_csv("./opcodes.vals", skipinitialspace=True)
 
-file = "greeting.txt"
+file = "printtest.txt"
 
 # different kinds of encodings
 
@@ -12,15 +12,34 @@ file = "greeting.txt"
 def make_binary(num):
 
     sum = 0
-    for i in range(6):
-        val = num %10
+    for i in range(32):
+        val = num % 10
         sum += 2**i * val
         # print(f"{num=}, {val = }, {sum = }")
         num = num // 10
-
     
     return sum
 
+def make_hex(num):
+
+    sum = 0
+    for i in range(12):
+        val = num % 10
+        sum += 16**i * val
+        # print(f"{num=}, {val = }, {sum = }")
+        num = num // 10
+    
+    return sum
+
+def to_decimal(num):
+    # print(num)
+    base = 10
+    if "0x" in num:
+        base = 16
+    elif "0b" in num:
+        base = 2
+    
+    return int(num, base)
 
 def hex_print(num):
     """
@@ -106,16 +125,23 @@ ct = 0
 
 while (string != ""):
         
-    ins = string.split(", ")
+    str = string.split(" // ")[0] # split off comments
+    ins = str.split(", ")
     op = ins[0]
+
+    if "#" in op:
+        op = op.split("# ")[1]
+        ct = to_decimal(op)
+        string = input.readline()
+        continue
+        
 
     # print(s, ins, op)
 
     if op == "li":
-        ins = "addiu, " + ins[1] + ", " + ins[1] + ", " + ins[2]
+        ins = "addiu, " + ins[1] + ", " + "$0" + ", " + ins[2]
         ins = ins.split(", ")
         op = ins[0]
-        print(ins)
 
 
     idx = ops[ops == op].index[0] # get index of row containing desired operation
@@ -135,6 +161,15 @@ while (string != ""):
 
         encoding = regsiter_encoding(s,t,d,a,f)
 
+    elif syntax == "Shift":
+        f = opcode
+        d = int(ins[1][1])
+        s = 0
+        t = int(ins[2][1])
+        a = to_decimal(ins[3])
+
+        encoding = regsiter_encoding(s,t,d,a,f)
+
     # elif syntax == "DivMult":V
     #     f = opcode
     #     s = int(ins[1][1])
@@ -147,7 +182,7 @@ while (string != ""):
         o = opcode
         t = int(ins[1][1])
         s = int(ins[2][1])
-        i = int(ins[3])
+        i = to_decimal(ins[3])
 
         encoding = immediate_encoding(o,s,t,i)
 
@@ -155,7 +190,18 @@ while (string != ""):
         o = opcode
         s = int(ins[1][1])
         t = int(ins[2][1])
-        label = int(ins[3])
+        label = to_decimal(ins[3])
+        # i = 4 + label << 2
+        i = label
+
+        encoding = immediate_encoding(o,s,t,i)
+
+    elif syntax == "BranchZ":
+        o = opcode
+        s = int(ins[1][1])
+        # t = int(ins[2][1])
+        t = 0
+        label = to_decimal(ins[2])
         # i = 4 + label << 2
         i = label
 
@@ -163,7 +209,7 @@ while (string != ""):
 
     elif syntax == "Jump":
         o = opcode
-        i = int(ins[1])
+        i = to_decimal(ins[1])
 
         encoding = jump_encoding(o,i)
 
@@ -172,10 +218,15 @@ while (string != ""):
         t = int(ins[1][1])
 
         i, s = ins[2].split(" ")
-        i = int(i)
+        i = to_decimal(i)
         s = int(s[2])
 
         encoding = immediate_encoding(o,s,t,i)
+    
+    
+    else:
+        print(f"{syntax} has not been implemented yet.")
+        exit()
 
     output.write(f"{ct:03x}: {encoding}  # {string}")
 
