@@ -10,29 +10,24 @@ file = "printtest.txt"
 # ========== ENCODINGS
 
 def make_binary(num):
-
     sum = 0
     for i in range(32):
         val = num % 10
         sum += 2**i * val
-        # print(f"{num=}, {val = }, {sum = }")
         num = num // 10
     
     return sum
 
 def make_hex(num):
-
     sum = 0
     for i in range(12):
         val = num % 10
         sum += 16**i * val
-        # print(f"{num=}, {val = }, {sum = }")
         num = num // 10
     
     return sum
 
 def to_decimal(num):
-    # print(num)
     base = 10
     if "0x" in num:
         base = 16
