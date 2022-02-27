@@ -1,14 +1,6 @@
 #%%
 import pandas as pd
 
-codes = pd.read_csv("./opcodes.vals", skipinitialspace=True)
-
-file = "stringtest.txt"
-
-# different kinds of encodings
-
-# ========== ENCODINGS
-
 def make_binary(num):
     sum = 0
     for i in range(32):
@@ -109,128 +101,123 @@ def jump_encoding(o, i):
 
 # ========== SYNTAXES
 
-ops = codes.iloc[:,0]
 
-input = open(f"./input/{file}", "r")
-output = open(f"./output/encoded-{file}", "w")
-output.write("v3.0 hex words addressed\n")
+def main():
 
-string = input.readline()
-ct = 0
+    codes = pd.read_csv("./opcodes.vals", skipinitialspace=True)
 
-while (string != ""):
-        
-    str = string.split(" // ")[0] # split off comments
-    ins = str.split(", ")
-    op = ins[0]
+    # turn df into a dicionary with operations as keys
+    codes = codes.set_index('operation').T.to_dict('list')
 
-    if "#" in op:
-        op = op.split("# ")[1]
-        ct = to_decimal(op)
-        string = input.readline()
-        continue
-        
+    file = "printtest.txt"
 
-    # print(s, ins, op)
-
-    if op == "li":
-        ins = "addiu, " + ins[1] + ", " + "$0" + ", " + ins[2]
-        ins = ins.split(", ")
-        op = ins[0]
-
-
-    idx = ops[ops == op].index[0] # get index of row containing desired operation
-
-    key = codes.iloc[idx]
-    op, opcode, syntax, des = key
-
-    opcode = make_binary(opcode)
-
-    # register encodings
-    if syntax == "ArithLog":
-        f = opcode
-        d = int(ins[1][1])
-        s = int(ins[2][1])
-        t = int(ins[3][1])
-        a = 0
-
-        encoding = regsiter_encoding(s,t,d,a,f)
-
-    elif syntax == "Shift":
-        f = opcode
-        d = int(ins[1][1])
-        s = 0
-        t = int(ins[2][1])
-        a = to_decimal(ins[3])
-
-        encoding = regsiter_encoding(s,t,d,a,f)
-
-    # elif syntax == "DivMult":V
-    #     f = opcode
-    #     s = int(ins[1][1])
-    #     t = int(ins[2][1])
-    #     a = int(ins[3])
-
-    #     encoding = regsiter_encoding(s,t,d,a,f)
-
-    elif syntax == "ArithLogI":
-        o = opcode
-        t = int(ins[1][1])
-        s = int(ins[2][1])
-        i = to_decimal(ins[3])
-
-        encoding = immediate_encoding(o,s,t,i)
-
-    elif syntax == "Branch":
-        o = opcode
-        s = int(ins[1][1])
-        t = int(ins[2][1])
-        label = to_decimal(ins[3])
-        # i = 4 + label << 2
-        i = label
-
-        encoding = immediate_encoding(o,s,t,i)
-
-    elif syntax == "BranchZ":
-        o = opcode
-        s = int(ins[1][1])
-        # t = int(ins[2][1])
-        t = 0
-        label = to_decimal(ins[2])
-        # i = 4 + label << 2
-        i = label
-
-        encoding = immediate_encoding(o,s,t,i)
-
-    elif syntax == "Jump":
-        o = opcode
-        i = to_decimal(ins[1])
-
-        encoding = jump_encoding(o,i)
-
-    elif syntax == "LoadStore":
-        o = opcode
-        t = int(ins[1][1])
-
-        i, s = ins[2].split(" ")
-        i = to_decimal(i)
-        s = int(s[2])
-
-        encoding = immediate_encoding(o,s,t,i)
-    
-    
-    else:
-        print(f"{syntax} has not been implemented yet.")
-        exit()
-
-    output.write(f"{ct:03x}: {encoding}  # {string}")
+    input = open(f"./{file}", "r")
+    output = open(f"./encoded-{file}", "w")
+    output.write("v3.0 hex words addressed\n")
 
     string = input.readline()
-    ct += 4
+    ct = 0
 
-input.close()
-output.close()
+    while (string != ""):
+            
+        str = string.split(" // ")[0] # split off comments
+        ins = str.split(", ")
+        op = ins[0]
 
+        if "#" in op:
+            op = op.split("# ")[1]
+            ct = to_decimal(op)
+            string = input.readline()
+            continue
+
+        if op == "li":
+            ins = "addiu, " + ins[1] + ", " + "$0" + ", " + ins[2]
+            ins = ins.split(", ")
+            op = ins[0]
+
+        opcode, syntax, des = codes[op]
+
+        opcode = make_binary(opcode)
+
+        # register encodings
+        if syntax == "ArithLog":
+            f = opcode
+            d = int(ins[1][1])
+            s = int(ins[2][1])
+            t = int(ins[3][1])
+            a = 0
+
+            encoding = regsiter_encoding(s,t,d,a,f)
+
+        elif syntax == "Shift":
+            f = opcode
+            d = int(ins[1][1])
+            s = 0
+            t = int(ins[2][1])
+            a = to_decimal(ins[3])
+
+            encoding = regsiter_encoding(s,t,d,a,f)
+
+        elif syntax == "ArithLogI":
+            o = opcode
+            t = int(ins[1][1])
+            s = int(ins[2][1])
+            i = to_decimal(ins[3])
+
+            encoding = immediate_encoding(o,s,t,i)
+
+        elif syntax == "Branch":
+            o = opcode
+            s = int(ins[1][1])
+            t = int(ins[2][1])
+            label = to_decimal(ins[3])
+            # i = 4 + label << 2
+            i = label
+
+            encoding = immediate_encoding(o,s,t,i)
+
+        elif syntax == "BranchZ":
+            o = opcode
+            s = int(ins[1][1])
+            # t = int(ins[2][1])
+            t = 0
+            label = to_decimal(ins[2])
+            # i = 4 + label << 2
+            i = label
+
+            encoding = immediate_encoding(o,s,t,i)
+
+        elif syntax == "Jump":
+            o = opcode
+            i = to_decimal(ins[1])
+
+            encoding = jump_encoding(o,i)
+
+        elif syntax == "LoadStore":
+            o = opcode
+            t = int(ins[1][1])
+
+            i, s = ins[2].split(" ")
+            i = to_decimal(i)
+            s = int(s[2])
+
+            encoding = immediate_encoding(o,s,t,i)
+        
+        
+        else:
+            print(f"{syntax} has not been implemented yet.")
+            exit()
+
+        output.write(f"{ct:03x}: {encoding}  # {string}")
+
+        string = input.readline()
+        ct += 4
+
+    input.close()
+    output.close()
+
+if __name__ == '__main__':
+    main()
 
 
 

@@ -1,0 +1,47 @@
+addiu, $1, $0, 0x48 // put H into $1
+sb, $1, 0x30 ($0) // store H at 0x0   
+addiu, $1, $0, 0x69 // put i in $1
+sb, $1, 0x31 ($0) // store i in 0x1
+addiu, $1, $0, 0x20 // put ' ' in $1
+sb, $1, 0x32 ($0) // store ' ' in 0x2
+addiu, $1, $0, 0x4a // put J in $1
+sb, $1, 0x33 ($0) // store J in 0x3
+addiu, $1, $0, 0x6f // put o in $1
+sb, $1, 0x34 ($0) // store o in 0x4
+addiu, $1, $0, 0x65 // put e in $1
+sb, $1, 0x35 ($0) // store e in 0x5
+addiu, $1, $0, 0x21 // put ! in $1
+sb, $1, 0x36 ($0) // store ! in 0x6
+sb, $0, 0x37 ($0) // put null byte at 0x7
+j, 0x100 // jump to address 100
+# 0x100 // jump to address 100 for strcpy program
+li, $4, 0x030 // put memory address 0x030 into $4
+li, $5, 0x060 // put memory address 0x060 into $5
+or, $6, $4, $0 // $6 = $4 | 0 (copy memory address of s into p in $6)
+lb, $3, 0 ($6) // load the first byte, at address p, into $3
+beq, $3, $0, 5 // branch if ch == 0; skip next 5 instructions
+sb, $3, 0 ($5) // store ch($3) at position D($5)
+addiu, $5, $5, 1 // add 1 to d
+addiu, $6, $6, 1 // add 1 to p
+lb, $3, 0 ($6) // load the byte at p
+j, 0x110 // jump to location 0x110
+sb, $5, 0 ($0) // store a null byte at d
+sub, $2, $6, $4 // compute n = P-S
+add, $5, $2, $0 // $5 = n + 0 (put n into register $5)
+li, $4, 0x60 // put address 0x60 into s ($4)
+j, 0x200 // jump to println instructions
+# 0x200 // jump to address 0x200
+li, $7, 0x8000 // put 0x8000 into $7
+sll, $7, $7, 16 // shift left to most significant 16 bits
+ori, $7, $7, 0x0008 // or with 0x0008 to effectively store 0x80000008 in $7 as d
+or, $6, $4, $0 // put s into $6, call it p
+add, $8, $5, $4 // S + n 
+sub, $9, $8, $6 // S+n-p
+blez, $9, 5 // skip next five instructions if $9 <= 0
+lb, $3, 0 ($6) // load in the byte at p
+sb, $3, 0 ($7) // store that byte at d
+addiu, $6, $6, 1 // p++
+sub, $9, $8, $6 // S+n-p
+j, 0x218 // jump back to blez
+li, $3, 0x0a // load \n into ch 
+sb, $3, 0 ($7) // store that byte at d
