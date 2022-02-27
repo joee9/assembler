@@ -3,7 +3,7 @@ import pandas as pd
 
 codes = pd.read_csv("./opcodes.vals", skipinitialspace=True)
 
-file = "printtest.txt"
+file = "stringtest.txt"
 
 # different kinds of encodings
 
